@@ -1,7 +1,7 @@
 // UIOverlay.js
 import { PipelineToolbar } from './toolbar';
 import { SubmitButton } from './submit';
-import { UtilityToggleButton } from './demoToggleButton';
+import { UtilityToggleButton } from './UitlityToggleButton';
 
 export const UIOverlay = ({ showUtilityNodes, onToggleUtility }) => {
   
