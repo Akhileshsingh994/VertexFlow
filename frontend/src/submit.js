@@ -20,8 +20,10 @@ export const SubmitButton = () => {
     const formData = new FormData();
     formData.append('pipeline', JSON.stringify(pipeline));
 
+    const baseUrl = process.env.REACT_APP_API_URL ;
+    
     try {
-      const res = await fetch('http://localhost:8000/pipelines/parse', {
+      const res = await fetch(`${baseUrl}pipelines/parse`, {
         method: 'POST',
         body: formData,
       });

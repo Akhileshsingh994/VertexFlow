@@ -1,204 +1,217 @@
 # VertexFlow
 
-A modern, visual pipeline builder application that enables users to create and manage node-based workflows through an intuitive drag-and-drop interface. Built with React, React Flow, and Zustand, VertexFlow provides a powerful platform for designing complex data processing pipelines.
+**VertexFlow** is a visual workflow editor that allows users to define and reason about pipelines using a **node-based canvas** instead of text configuration.
 
-## Features
+The project focuses on the **editing, state modeling, and validation layer** of workflow systems — specifically how complex graph-based logic can be created, modified, and validated interactively by users.
 
-- **Drag-and-Drop Interface**: Intuitive visual canvas for building pipelines
-- **Extensible Node System**: Create custom nodes with minimal boilerplate using the BaseNode abstraction
-- **Dynamic Text Processing**: Text nodes with automatic variable detection and dynamic handle generation
-- **Pipeline Validation**: Built-in DAG (Directed Acyclic Graph) validation to ensure valid pipeline structures
-- **Modern UI**: Beautiful dark theme with smooth animations and responsive design
-- **Real-time Updates**: Live node resizing and dynamic handle management
+> This is intentionally **not** a full workflow execution engine. The scope is limited to composition, correctness, and UX clarity.
+
+**Live Demo:** <LIVE_URL>
+
+---
+
+## Problem
+
+As workflows grow, text-based configurations become hard to reason about:
+- ordering mistakes are easy to make
+- cycles are hard to detect visually
+- small changes can break entire pipelines
+
+For non-technical users especially, defining logic through JSON or YAML introduces unnecessary cognitive load.
+
+Most failures in workflow systems happen **before execution** — during creation, editing, and validation.
+
+---
+
+## Solution
+
+VertexFlow provides a **canvas-based editor** where users define workflows visually using connected nodes.  
+The system emphasizes:
+- predictable state updates under frequent mutations
+- real-time structural feedback
+- guardrails to prevent invalid pipelines
+
+The goal is to make workflow structure **visible, inspectable, and safe to modify**.
+
+---
+
+## Scope & Non-Goals
+
+This project intentionally focuses on a **realistic slice** of a larger system.
+
+### In scope
+- Visual workflow composition
+- Graph state modeling
+- Node and edge mutations
+- Structural validation (DAG correctness)
+- UX for non-technical users
+
+### Out of scope
+- Workflow execution
+- Persistence / long-term storage
+- Real-time collaboration
+- Scheduling or retries
+
+These boundaries were explicit tradeoffs to keep the system focused and correct.
+
+---
+
+## System Overview
+
+VertexFlow is split into two clear layers:
+
+1. **Editor Layer (Frontend)**  
+   Responsible for user interaction, graph editing, and state consistency.
+
+2. **Validation Layer (Backend)**  
+   Responsible for verifying pipeline structure and enforcing correctness rules.
+
+This mirrors how production systems separate **editor state** from **trusted validation logic**.
+
+---
+
+## Key Design Decisions
+
+### Canvas-Based Interaction
+
+A canvas model was chosen over form-based configuration to:
+- support non-linear editing
+- allow spatial reasoning about logic
+- reduce cognitive load as pipelines scale
+
+Node interactions include drag, resize, connect, and delete — all of which must keep graph state consistent.
+
+---
+
+### Centralized Graph State
+
+Graph state (nodes, edges, IDs, mutations) is managed in a **centralized store** rather than component-level state.
+
+This was necessary because:
+- multiple UI components mutate shared state
+- graph changes are event-driven and non-linear
+- consistency must be preserved during frequent updates
+
+A lightweight global store was preferred over prop drilling or local reducers to keep updates predictable and debuggable.
+
+---
+
+### Dynamic Text Parsing & Handles
+
+Text nodes support variable interpolation using `{{variable}}` syntax.
+
+This required:
+- regex-based parsing of user input
+- real-time detection of variable additions/removals
+- dynamic creation and removal of input handles
+- synchronization between UI and graph state
+
+This models how templated data flows are handled in real workflow systems.
+
+---
+
+### Validation as a Separate Concern
+
+Pipeline validation is handled server-side via a minimal API.
+
+The backend:
+- receives the current graph structure
+- checks for cycles using topological sorting
+- returns structural validity
+
+This enforces correctness independently of client state and mirrors real-world trust boundaries.
+
+---
+
+## Failure Cases Considered
+
+The system explicitly handles:
+- node deletion with existing connections
+- invalid or circular graph structures
+- stale edges during rapid UI interactions
+- inconsistent state during drag / resize operations
+
+These cases were prioritized over feature breadth.
+
+---
+
+## Tradeoffs
+
+- Prioritized clarity and correctness over feature depth
+- Deferred execution to keep scope focused
+- Kept backend intentionally minimal
+- Optimized for single-user workflows
+
+These tradeoffs were chosen deliberately, not due to limitations.
+
+---
+
+## What I’d Improve Next
+
+With more time, I would explore:
+- persistence and versioning
+- richer validation rules per node
+- collaborative editing
+- execution simulation
+- performance optimization for large graphs
+
+---
 
 ## Tech Stack
 
-- **Frontend**: React 18, React Flow 11, Zustand
-- **Backend**: FastAPI (Python)
-- **Styling**: CSS Variables with custom theming
+### Frontend
+- React 18
+- React Flow
+- Zustand
+- CSS Variables (custom theming)
 
-## Getting Started
+### Backend
+- FastAPI (Python)
+- DAG validation via topological sorting
+- CORS-enabled API boundary
+
+---
+
+## Running Locally
 
 ### Prerequisites
-
-- Node.js (v14 or higher)
+- Node.js (v14+)
 - Python 3.8+
-- pip
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd VertexFlow
-   ```
-
-2. **Install frontend dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-3. **Install backend dependencies**
-   ```bash
-   cd ../backend
-   pip install fastapi uvicorn
-   ```
-
-### Running the Application
-
-1. **Start the frontend development server**
-   ```bash
-   cd frontend
-   npm start
-   ```
-   The app will be available at `http://localhost:3000`
-
-2. **Start the backend server** (in a separate terminal)
-   ```bash
-   cd backend
-   uvicorn main:app --reload
-   ```
-   The API will be available at `http://localhost:8000`
-
-> **Note**: Both servers must be running for full functionality, including pipeline validation.
-
-## Core Components
-
-### Node Types
-
-#### Core Nodes
-- **Input Node**: Entry point for data with configurable name and type
-- **LLM Node**: Large Language Model integration with system prompt, user prompt, and response handles
-- **Output Node**: Exit point for processed data with configurable name and type
-- **Text Node**: Dynamic text processing with variable interpolation using `{{variable}}` syntax
-
-#### Utility Nodes
-- **API Node**: HTTP API integration
-- **Delay Node**: Add delays to pipeline execution
-- **Math Node**: Mathematical operations
-- **Condition Node**: Conditional logic branching
-- **Debug Node**: Debugging and logging utilities
-
-### Architecture
-
-#### BaseNode Abstraction
-All nodes are built using the `BaseNode` component (`src/nodes/baseNode.js`), which provides:
-- Consistent card-based UI with title bar and content area
-- Configurable sizing (width, height, auto-height)
-- Standardized handle positioning and styling
-- Shared form control styling
-
-#### State Management
-The application uses Zustand (`src/store.js`) for global state management:
-- Node and edge storage
-- Automatic node ID generation
-- React Flow integration for node/edge changes
-
-#### Text Node Features
-The Text Node (`src/nodes/textNode.js`) includes:
-- **Auto-resizing**: Textarea and node height adjust automatically as content grows
-- **Variable Detection**: Automatically detects variables in `{{variableName}}` format
-- **Dynamic Handles**: Creates input handles for each detected variable
-- **Real-time Updates**: Handles update immediately when variables are added or removed
-
-## Usage
-
-1. **Create Nodes**: Drag nodes from the toolbar at the top of the canvas
-2. **Connect Nodes**: Click and drag from output handles (right side) to input handles (left side)
-3. **Configure Nodes**: Click on nodes to edit their properties
-4. **Use Variables**: In Text nodes, use `{{variableName}}` to create dynamic inputs
-5. **Validate Pipeline**: Click the "Validate Pipeline" button at the bottom to check if your pipeline is a valid DAG
-
-### Utility Nodes
-Toggle utility nodes on/off using the button in the top-right corner to access additional node types.
-
-## API Endpoints
-
-### `POST /pipelines/parse`
-Validates a pipeline structure and checks if it forms a valid DAG.
-
-**Request**: Form data with `pipeline` field (JSON string)
-```json
-{
-  "nodes": [{"id": "node-1", "type": "input"}, ...],
-  "edges": [{"source": "node-1", "target": "node-2"}, ...]
-}
+### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+### Backend
+```bash
+cd backend
+pip install fastapi uvicorn
+uvicorn main:app --reload
 ```
 
-**Response**:
-```json
-{
-  "num_nodes": 3,
-  "num_edges": 2,
-  "is_dag": true
-}
-```
+Both services must be running for validation to work.
+
+---
 
 ## Project Structure
 
-```
 VertexFlow/
 ├── frontend/
 │   ├── src/
-│   │   ├── App.js              # Main application component
-│   │   ├── ui.js                # React Flow canvas configuration
-│   │   ├── store.js             # Zustand state management
-│   │   ├── UIOverlay.js         # UI overlay positioning
-│   │   ├── toolbar.js           # Node toolbar component
-│   │   ├── submit.js            # Pipeline validation button
-│   │   ├── nodes/
-│   │   │   ├── baseNode.js      # Base node abstraction
-│   │   │   ├── inputNode.js     # Input node
-│   │   │   ├── llmNode.js       # LLM node
-│   │   │   ├── outputNode.js    # Output node
-│   │   │   ├── textNode.js      # Text node with variables
-│   │   │   └── utilityNode/     # Additional utility nodes
+│   │   ├── store.js        # Centralized graph state
+│   │   ├── ui.js           # Canvas configuration
+│   │   ├── nodes/          # Node implementations
 │   │   └── ...
-│   └── package.json
 ├── backend/
-│   └── main.py                  # FastAPI server with DAG validation
+│   └── main.py             # Pipeline validation API
 └── README.md
-```
 
-## Key Features Explained
+---
 
-### Dynamic Variable Detection
-Text nodes automatically detect variables written in double curly braces (e.g., `{{input}}`, `{{userName}}`). For each unique variable, a corresponding input handle is created on the left side of the node, allowing you to connect data from other nodes.
+##Closing Note
 
-### Pipeline Validation
-The validation feature checks if your pipeline forms a valid Directed Acyclic Graph (DAG). This ensures:
-- No circular dependencies
-- All nodes are reachable
-- The pipeline can be executed in a valid order
+VertexFlow is not a demo of libraries — it’s a focused exploration of how visual workflow editors behave under real interaction constraints.
 
-The backend uses Kahn's algorithm for topological sorting to detect cycles.
-
-## Development
-
-### Adding Custom Nodes
-1. Create a new component in `src/nodes/` or `src/nodes/utilityNode/`
-2. Use the `BaseNode` component as a wrapper
-3. Define your handles (inputs/outputs)
-4. Register the node type in `src/ui.js` in the `nodeTypes` object
-5. Add a draggable button in `src/toolbar.js`
-
-Example:
-```javascript
-import { BaseNode } from './baseNode';
-import { Position } from 'reactflow';
-
-export const MyCustomNode = ({ id, data }) => {
-  const handles = [
-    { type: 'target', position: Position.Left, id: 'input' },
-    { type: 'source', position: Position.Right, id: 'output' }
-  ];
-
-  return (
-    <BaseNode title="My Node" handles={handles}>
-      {/* Your node content */}
-    </BaseNode>
-  );
-};
-```
-
+The emphasis is on state modeling, correctness, and UX clarity, not on feature completeness.
