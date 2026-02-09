@@ -6,7 +6,7 @@ The project focuses on the **editing, state modeling, and validation layer** of 
 
 > This is intentionally **not** a full workflow execution engine. The scope is limited to composition, correctness, and UX clarity.
 
-**Live Demo:** <LIVE_URL>
+**Live Link:** https://vertexflow.vercel.app/
 
 ---
 
