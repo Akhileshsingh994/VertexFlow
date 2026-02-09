@@ -196,7 +196,7 @@ Both services must be running for validation to work.
 ---
 
 ## Project Structure
-` ` `
+` ` `text
 VertexFlow/
 ├── frontend/
 │   ├── src/
