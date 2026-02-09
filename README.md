@@ -196,7 +196,7 @@ Both services must be running for validation to work.
 ---
 
 ## Project Structure
-
+` ` `
 VertexFlow/
 ├── frontend/
 │   ├── src/
@@ -207,10 +207,10 @@ VertexFlow/
 ├── backend/
 │   └── main.py             # Pipeline validation API
 └── README.md
-
+` ` `
 ---
 
-##Closing Note
+## Closing Note
 
 VertexFlow is not a demo of libraries — it’s a focused exploration of how visual workflow editors behave under real interaction constraints.
 
